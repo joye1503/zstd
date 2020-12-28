@@ -26,13 +26,38 @@ env:
 matrix:
   fast_finish: true
   include:
+    - name: amd64    # ~2.5 mn
+      os: linux
+      arch: amd64
+      script:
+        - make check
     - name: arm64    # ~2.5 mn
       os: linux
       arch: arm64
       script:
         - make check
-
+    - name: arm64-graviton2    # ~2.5 mn
+      os: linux
+      arch: arm64-graviton2
+      dist: xenial
+      group: edge
+      virt: lxd
+      script:
+        - make check
     - name: make test (complete)
+      script:
+        # DEVNULLRIGHTS : will request sudo rights to test permissions on /dev/null
+        - DEVNULLRIGHTS=test make test
+    - name: make test (complete)
+      arch: arm64
+      script:
+        # DEVNULLRIGHTS : will request sudo rights to test permissions on /dev/null
+        - DEVNULLRIGHTS=test make test
+    - name: make test (complete)
+      arch: arm64-graviton2
+      dist: xenial
+      group: edge
+      virt: lxd
       script:
         # DEVNULLRIGHTS : will request sudo rights to test permissions on /dev/null
         - DEVNULLRIGHTS=test make test
@@ -47,13 +72,68 @@ matrix:
         - make clean && make check MOREFLAGS="-Werror -DHUF_FORCE_DECOMPRESS_X2 -DZSTD_FORCE_DECOMPRESS_SEQUENCES_LONG"
         - make clean && make -j all MOREFLAGS="-Werror -DZSTD_NO_INLINE -DZSTD_STRIP_ERROR_STRINGS"
         - make clean && make check MOREFLAGS="-Werror -DZSTD_NO_INLINE -DZSTD_STRIP_ERROR_STRINGS"
+    - name: Minimal Decompressor Macros    # ~5mn
+      arch: arm64
+      script:
+        - make clean && make -j all ZSTD_LIB_MINIFY=1 MOREFLAGS="-Werror"
+        - make clean && make check ZSTD_LIB_MINIFY=1 MOREFLAGS="-Werror"
+        - make clean && make -j all MOREFLAGS="-Werror -DHUF_FORCE_DECOMPRESS_X1 -DZSTD_FORCE_DECOMPRESS_SEQUENCES_SHORT"
+        - make clean && make check MOREFLAGS="-Werror -DHUF_FORCE_DECOMPRESS_X1 -DZSTD_FORCE_DECOMPRESS_SEQUENCES_SHORT"
+        - make clean && make -j all MOREFLAGS="-Werror -DHUF_FORCE_DECOMPRESS_X2 -DZSTD_FORCE_DECOMPRESS_SEQUENCES_LONG"
+        - make clean && make check MOREFLAGS="-Werror -DHUF_FORCE_DECOMPRESS_X2 -DZSTD_FORCE_DECOMPRESS_SEQUENCES_LONG"
+        - make clean && make -j all MOREFLAGS="-Werror -DZSTD_NO_INLINE -DZSTD_STRIP_ERROR_STRINGS"
+        - make clean && make check MOREFLAGS="-Werror -DZSTD_NO_INLINE -DZSTD_STRIP_ERROR_STRINGS"
+    - name: Minimal Decompressor Macros    # ~5mn
+      arch: arm64-graviton2
+      dist: xenial
+      group: edge
+      virt: lxd
+      script:
+        - make clean && make -j all ZSTD_LIB_MINIFY=1 MOREFLAGS="-Werror"
+        - make clean && make check ZSTD_LIB_MINIFY=1 MOREFLAGS="-Werror"
+        - make clean && make -j all MOREFLAGS="-Werror -DHUF_FORCE_DECOMPRESS_X1 -DZSTD_FORCE_DECOMPRESS_SEQUENCES_SHORT"
+        - make clean && make check MOREFLAGS="-Werror -DHUF_FORCE_DECOMPRESS_X1 -DZSTD_FORCE_DECOMPRESS_SEQUENCES_SHORT"
+        - make clean && make -j all MOREFLAGS="-Werror -DHUF_FORCE_DECOMPRESS_X2 -DZSTD_FORCE_DECOMPRESS_SEQUENCES_LONG"
+        - make clean && make check MOREFLAGS="-Werror -DHUF_FORCE_DECOMPRESS_X2 -DZSTD_FORCE_DECOMPRESS_SEQUENCES_LONG"
+        - make clean && make -j all MOREFLAGS="-Werror -DZSTD_NO_INLINE -DZSTD_STRIP_ERROR_STRINGS"
+        - make clean && make check MOREFLAGS="-Werror -DZSTD_NO_INLINE -DZSTD_STRIP_ERROR_STRINGS"
 
     - name: static analyzer scanbuild    # ~26mn
       dist: trusty  # note : it's important to pin down a version of static analyzer, since different versions report different false positives
       script:
         - make staticAnalyze
+    - name: static analyzer scanbuild    # ~26mn
+      dist: trusty  # note : it's important to pin down a version of static analyzer, since different versions report different false positives
+      arch: arm64
+      script:
+        - make staticAnalyze
+    - name: static analyzer scanbuild    # ~26mn
+      #dist: trusty  # note : it's important to pin down a version of static analyzer, since different versions report different false positives
+      arch: arm64-graviton2
+      dist: xenial
+      group: edge
+      virt: lxd
+      script:
+        - make staticAnalyze
 
     - name: Valgrind + Fuzz Test Stack Mode    # ~ 7mn
+      script:
+        - make valgrindinstall
+        - make -C tests clean valgrindTest
+        - make clean
+        - make -C tests test-fuzzer-stackmode
+    - name: Valgrind + Fuzz Test Stack Mode    # ~ 7mn
+      arch: arm64
+      script:
+        - make valgrindinstall
+        - make -C tests clean valgrindTest
+        - make clean
+        - make -C tests test-fuzzer-stackmode
+    - name: Valgrind + Fuzz Test Stack Mode    # ~ 7mn
+      arch: arm64-graviton2
+      dist: xenial
+      group: edge
+      virt: lxd
       script:
         - make valgrindinstall
         - make -C tests clean valgrindTest
